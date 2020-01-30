@@ -1,3 +1,6 @@
+server/olk14msgsource
+public/mails
+
 # Logs
 logs
 *.log
