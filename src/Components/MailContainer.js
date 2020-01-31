@@ -1,23 +1,32 @@
 import React, { useEffect, useState } from 'react'
 import { Layout, Tabs, Icon } from 'antd'
 import styled from '@emotion/styled'
-import TableInbox from 'Pages/TableInbox'
+import TableInbox from 'Components/TableInbox'
 
 const { Content } = Layout
 const { TabPane } = Tabs
 
 const MailContainer = () => {
-  const [mails, setMails] = useState(null)
+  const [mails, setMails] = useState()
 
   useEffect(() => {
     if (!mails)
       fetch('mails').then(async res => {
         const text = await res.text()
-        setMails(JSON.parse(text))
+        const parsedMails = JSON.parse(text)
+        const classifiedMails = parsedMails.reduce(
+          (mails, mail) => {
+            if (!mail.date) return mails
+            mails[mail.from ? 'incomming' : 'outcomming'].push(mail)
+            return mails
+          },
+          { incomming: [], outcomming: [] },
+        )
+        setMails(classifiedMails)
       })
   }, [mails, setMails])
 
-  return (
+  return !mails ? null : (
     <StyledContent>
       <Tabs defaultActiveKey="1">
         <TabPane
@@ -29,8 +38,7 @@ const MailContainer = () => {
           }
           key="1"
         >
-          {mails && mails.length}
-          {/* <TableInbox /> */}
+          <TableInbox incommingMails={mails.incomming} />
         </TabPane>
         <TabPane
           tab={
@@ -41,7 +49,7 @@ const MailContainer = () => {
           }
           key="2"
         >
-          Outbox
+          <TableInbox incommingMails={mails.outcomming} />
         </TabPane>
       </Tabs>
     </StyledContent>
