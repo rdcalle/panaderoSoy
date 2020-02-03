@@ -8,50 +8,90 @@ import Context from 'Utils/context'
 const { Content } = Layout
 const { TabPane } = Tabs
 
-const checkFilters = (mails, filters) =>
-  mails.map(mail => ({
+const checkFilters = (mails, filters, fieldsToFilter) => {
+  return mails.map(mail => ({
     ...mail,
     visible:
       !filters.length ||
-      filters.every(filter => RegExp(filter, 'i').test(mail.from)),
+      fieldsToFilter.some(field =>
+        filters.every(filter => RegExp(filter, 'i').test(mail[field])),
+      ),
   }))
+}
 
 const MailContainer = () => {
-  const { textFilters } = useContext(Context)
+  const { textFilters, dateFilter, setDateFilter } = useContext(Context)
   const [mails, setMails] = useState()
 
   useEffect(() => {
-    console.info('el de relleno de mails')
     if (!mails)
       fetch('mails').then(async res => {
         const text = await res.text()
         const parsedMails = JSON.parse(text)
-        const classifiedMails = parsedMails.reduce(
+        const {
+          incomming,
+          outcomming,
+          oldestDate,
+          nearestDate,
+        } = parsedMails.reduce(
           (mails, mail) => {
             if (!mail.date) return mails
             mails[mail.from ? 'incomming' : 'outcomming'].push({
               ...mail,
               visible: true,
               from: decoder(mail.from),
-              to: mail.to ? decoder(mail.to) : mail.to,
+              to: mail.to ? decoder(mail.to.join(' ')) : mail.to,
               subject: decoder(mail.subject),
             })
+            mails.oldestDate = !mails.oldestDate
+              ? mail.date
+              : mail.date < mails.oldestDate
+              ? mail.date
+              : mails.oldestDate
+            mails.nearestDate = !mails.nearestDate
+              ? mail.date
+              : mail.date > mails.nearestDate
+              ? mail.date
+              : mails.nearestDate
+
             return mails
           },
-          { incomming: [], outcomming: [] },
+          { incomming: [], outcomming: [], oldestDate: 0, nearestDate: 0 },
         )
-        setMails(classifiedMails)
+        setMails({ incomming, outcomming })
+        setDateFilter([oldestDate, nearestDate])
       })
   }, [mails])
 
   useEffect(() => {
-    console.info('el de un nuevo filtro', textFilters)
     if (mails)
       setMails({
-        incomming: checkFilters(mails.incomming, textFilters),
-        outcomming: checkFilters(mails.outcomming, textFilters),
+        incomming: checkFilters(mails.incomming, textFilters, [
+          'from',
+          'subject',
+        ]),
+        outcomming: checkFilters(mails.outcomming, textFilters, [
+          'to',
+          'subject',
+        ]),
       })
   }, [textFilters])
+
+  useEffect(() => {
+    const [startDate, endDate] = dateFilter
+    if (startDate && endDate) {
+      setMails({
+        incomming: mails.incomming.map(mail => ({
+          ...mail,
+          visible: mail.date >= startDate && mail.date <= endDate,
+        })),
+        outcomming: mails.outcomming.map(mail => ({
+          ...mail,
+          visible: mail.date >= startDate && mail.date <= endDate,
+        })),
+      })
+    }
+  }, [dateFilter])
 
   if (!mails) return null
 
@@ -60,7 +100,7 @@ const MailContainer = () => {
 
   return (
     <StyledContent>
-      <Tabs defaultActiveKey="1">
+      <Tabs defaultActiveKey="2">
         <TabPane
           tab={
             <span>
@@ -81,7 +121,7 @@ const MailContainer = () => {
           }
           key="2"
         >
-          <TableInbox incommingMails={outcomming} />
+          <TableInbox outcommingMails={outcomming} />
         </TabPane>
       </Tabs>
     </StyledContent>

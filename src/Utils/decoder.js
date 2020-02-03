@@ -70,6 +70,12 @@ const w1252Q = text =>
 const w1252B = text =>
   atob(text.match(/=\?(.+)\?=/)[1].replace(/[wW]indows-125\d\?B\?/g, ''))
 
+const checkLetters = text => {
+  if (typeof text === 'string')
+    return unescape(text.replace(/=(\w{2})/g, '%$1'))
+  return text
+}
+
 const isUtfQ = text => /=\?[uU][tT][fF]-8\?Q\?/.test(text)
 const isUtfB = text => /=\?[uU][tT][fF]-8\?B\?/.test(text)
 const isIsoQ = text => /=\?[Ii][Ss][Oo]-8859-15?\?Q\?/.test(text)
@@ -79,19 +85,21 @@ const isW1252Q = text => /[wW]indows-125\d\?Q\?/.test(text)
 
 const decoder = text => {
   try {
-    return isUtfQ(text)
-      ? utfQ(text)
-      : isUtfB(text)
-      ? utfB(text)
-      : isIsoQ(text)
-      ? isoQ(text)
-      : isIsoB(text)
-      ? isoB(text)
-      : isW1252B(text)
-      ? w1252B(text)
-      : isW1252Q(text)
-      ? w1252Q(text)
-      : text
+    return checkLetters(
+      isUtfQ(text)
+        ? utfQ(text)
+        : isUtfB(text)
+        ? utfB(text)
+        : isIsoQ(text)
+        ? isoQ(text)
+        : isIsoB(text)
+        ? isoB(text)
+        : isW1252B(text)
+        ? w1252B(text)
+        : isW1252Q(text)
+        ? w1252Q(text)
+        : text,
+    )
   } catch (error) {
     console.error(text, error)
     return text
