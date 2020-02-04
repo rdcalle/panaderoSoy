@@ -41,7 +41,7 @@ const match = (text, pattern, toType) => {
 
 const canGetMail = (tag, line, previous) => {
   const tagPattern = new RegExp(`^${tag}: .+$`)
-  return tagPattern.test(line) || (previous && /^ .+@.+\..+/.test(line))
+  return tagPattern.test(line) || (previous && /^\s.+@.+\..+/.test(line))
 }
 
 const data = []
@@ -55,6 +55,8 @@ const extractMsgFromDir = directory =>
         (
           {
             to,
+            cc,
+            cco,
             date,
             subject,
             from,
@@ -69,7 +71,7 @@ const extractMsgFromDir = directory =>
           i,
           mail,
         ) => {
-          gettingTo = canGetMail('Envelope-to', contentLine, gettingTo)
+          gettingTo = canGetMail('To', contentLine, gettingTo)
           gettingFrom = canGetMail('From', contentLine, gettingFrom)
           gettingCC = canGetMail('Cc', contentLine, gettingFrom)
           gettingCCO = canGetMail('CCo', contentLine, gettingFrom)
@@ -78,15 +80,28 @@ const extractMsgFromDir = directory =>
             ...props,
             gettingTo,
             gettingFrom,
-            to: gettingTo ? [...to, match(contentLine, / (.+@.+\..+),?$/)] : to,
+            to: gettingTo
+              ? [...to, match(contentLine, /\s(.+@.+\..+),?$/)]
+              : to,
+            cc: gettingCC
+              ? [...cc, match(contentLine, /\s(.+@.+\..+),?$/)]
+              : cc,
+            cco: gettingCCO
+              ? [...cco, match(contentLine, /\s(.+@.+\..+),?$/)]
+              : cco,
             date: date || match(contentLine, /^Date: (.+)$/, 'date'),
             subject: subject || match(contentLine, /^Subject: (.+)$/),
-            from: gettingFrom
-              ? match(contentLine, / (.+@.+\..+),?$/).replace(/[<>]/g, '')
-              : from,
+            from:
+              !from && gettingFrom
+                ? match(contentLine, /\s(.+@.+\..+),?$/).replace(/[<>]/g, '')
+                : from,
             content:
               content ||
-              (match(contentLine, /^MIME-Version: (.+$)/) && mail.slice(i)),
+              (match(
+                contentLine,
+                /(MIME-Version|charset|Content-Transfer-Encoding)/i,
+              ) &&
+                mail.slice(i)),
           }
         },
         {

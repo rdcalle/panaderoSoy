@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useContext } from 'react'
 import { Layout, Tabs, Icon, Tag } from 'antd'
 import styled from '@emotion/styled'
-import TableInbox from 'Components/TableInbox'
+import TableMails from 'Components/TableMails'
 import decoder from 'Utils/decoder'
+import contentDecoder from 'Utils/content_decoder'
 import Context from 'Utils/context'
 
 const { Content } = Layout
@@ -35,14 +36,19 @@ const MailContainer = () => {
           nearestDate,
         } = parsedMails.reduce(
           (mails, mail) => {
-            if (!mail.date) return mails
-            mails[mail.from ? 'incomming' : 'outcomming'].push({
-              ...mail,
-              visible: true,
-              from: decoder(mail.from),
-              to: mail.to ? decoder(mail.to.join(' ')) : mail.to,
-              subject: decoder(mail.subject),
-            })
+            if (!mail.date || !mail.subject) return mails
+            mails[/vvazquez/.test(mail.from) ? 'outcomming' : 'incomming'].push(
+              {
+                ...mail,
+                visible: true,
+                from: decoder(mail.from),
+                to: mail.to ? decoder(mail.to.join(' ')) : mail.to,
+                cc: mail.cc ? decoder(mail.cc.join(' ')) : mail.cc,
+                cco: mail.cco ? decoder(mail.cco.join(' ')) : mail.cco,
+                subject: decoder(mail.subject),
+                body: contentDecoder(mail.content),
+              },
+            )
             mails.oldestDate = !mails.oldestDate
               ? mail.date
               : mail.date < mails.oldestDate
@@ -69,6 +75,7 @@ const MailContainer = () => {
         incomming: checkFilters(mails.incomming, textFilters, [
           'from',
           'subject',
+          'body',
         ]),
         outcomming: checkFilters(mails.outcomming, textFilters, [
           'to',
@@ -100,7 +107,7 @@ const MailContainer = () => {
 
   return (
     <StyledContent>
-      <Tabs defaultActiveKey="2">
+      <Tabs defaultActiveKey="1">
         <TabPane
           tab={
             <span>
@@ -110,7 +117,7 @@ const MailContainer = () => {
           }
           key="1"
         >
-          <TableInbox incommingMails={incomming} />
+          <TableMails incommingMails={incomming} />
         </TabPane>
         <TabPane
           tab={
@@ -121,7 +128,7 @@ const MailContainer = () => {
           }
           key="2"
         >
-          <TableInbox outcommingMails={outcomming} />
+          <TableMails outcommingMails={outcomming} />
         </TabPane>
       </Tabs>
     </StyledContent>

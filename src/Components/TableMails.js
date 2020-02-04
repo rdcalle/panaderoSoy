@@ -5,11 +5,11 @@ import Highlighter from 'react-highlight-words'
 import Context from 'Utils/context'
 import MailContent from 'Components/MailContent'
 
-const TableInbox = ({ incommingMails, outcommingMails }) => {
+const TableMails = ({ incommingMails, outcommingMails }) => {
   const { textFilters } = useContext(Context)
   const [readingMail, setReadingMail] = useState(null)
 
-  const highlightedText = (text, mail) => (
+  const highlightedText = text => (
     <Highlighter
       highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
       searchWords={textFilters}
@@ -55,7 +55,7 @@ const TableInbox = ({ incommingMails, outcommingMails }) => {
     ],
   }
 
-  const onRowClicked = (mail, rowId) => {
+  const onRowClicked = mail => {
     console.info(mail)
     setReadingMail(mail)
   }
@@ -77,9 +77,13 @@ const TableInbox = ({ incommingMails, outcommingMails }) => {
           onClick: () => onRowClicked(mail, rowId),
         })}
       />
-      <MailContent mail={readingMail} onClose={() => setReadingMail(null)} />
+      <MailContent
+        mail={readingMail}
+        onClose={() => setReadingMail(null)}
+        isInbox={!!incommingMails}
+      />
     </>
   )
 }
 
-export default TableInbox
+export default TableMails
