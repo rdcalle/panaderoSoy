@@ -1,4 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react'
+import { navigate } from '@reach/router'
 import { DatePicker, Select, Button } from 'antd'
 import styled from '@emotion/styled'
 import moment from 'moment'
@@ -34,7 +35,9 @@ const HeaderFilters = () => {
           }
         />
       )}
-      <Button type="primary">Salir</Button>
+      <Button type="primary" onClick={() => navigate('/login')}>
+        Salir
+      </Button>
     </HeaderRow>
   )
 }

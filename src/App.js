@@ -8,7 +8,7 @@ const App = () => {
     <Router>
       <Login path="/login" />
       <Box path="/box" />
-      <Redirect noThrow from="*" to="/box" />
+      <Redirect noThrow from="*" to="/login" />
     </Router>
   )
 }
