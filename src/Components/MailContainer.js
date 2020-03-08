@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useContext } from 'react'
-import { Layout, Tabs, Icon, Tag } from 'antd'
+import { Layout, Tabs, Icon, Tag, Spin } from 'antd'
 import styled from '@emotion/styled'
 import TableMails from 'Components/TableMails'
 import decoder from 'Utils/decoder'
 import contentDecoder from 'Utils/content_decoder'
 import Context from 'Utils/context'
+import { keepAliveSession } from 'Utils/access'
 
 const { Content } = Layout
 const { TabPane } = Tabs
@@ -23,6 +24,10 @@ const checkFilters = (mails, filters, fieldsToFilter) => {
 const MailContainer = () => {
   const { textFilters, dateFilter, setDateFilter } = useContext(Context)
   const [mails, setMails] = useState()
+
+  useEffect(() => {
+    keepAliveSession()
+  })
 
   useEffect(() => {
     if (!mails)
@@ -100,7 +105,12 @@ const MailContainer = () => {
     }
   }, [dateFilter])
 
-  if (!mails) return null
+  if (!mails)
+    return (
+      <Splash>
+        <Spin size="large" tip="Cargando... que esto va a tardar un poco..." />
+      </Splash>
+    )
 
   const incomming = mails.incomming.filter(({ visible }) => visible)
   const outcomming = mails.outcomming.filter(({ visible }) => visible)
@@ -143,4 +153,10 @@ const StyledContent = styled(Content)`
     background: #fff;
     padding: 16px;
   }
+`
+const Splash = styled.div`
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
 `

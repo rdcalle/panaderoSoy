@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { navigate } from '@reach/router'
 import styled from '@emotion/styled'
 import { Form, Icon, Input, Button } from 'antd'
-
-const checkPasswd = password => true
+import { chiperedPasswd, checkPasswd, setSession } from 'Utils/access'
 
 const Login = ({ form: { getFieldDecorator, validateFields } }) => {
   const [wrongPassword, setWrongPassword] = useState(false)
@@ -15,7 +14,11 @@ const Login = ({ form: { getFieldDecorator, validateFields } }) => {
   const handleSubmit = e => {
     e.preventDefault()
     validateFields((_, { username, password }) => {
-      if (username === 'paniMan' && checkPasswd(password)) navigate('/box')
+      const cipheredPwd = chiperedPasswd(password)
+      if (username === 'paniMan' && checkPasswd(cipheredPwd)) {
+        navigate('/box')
+        setSession(cipheredPwd)
+      }
     })
     setWrongPassword(true)
   }

@@ -4,6 +4,7 @@ import moment from 'moment'
 import Highlighter from 'react-highlight-words'
 import Context from 'Utils/context'
 import MailContent from 'Components/MailContent'
+import { keepAliveSession } from 'Utils/access'
 
 const TableMails = ({ incommingMails, outcommingMails }) => {
   const { textFilters } = useContext(Context)
@@ -56,8 +57,9 @@ const TableMails = ({ incommingMails, outcommingMails }) => {
   }
 
   const onRowClicked = mail => {
-    console.info(mail)
+    // console.info(mail)
     setReadingMail(mail)
+    keepAliveSession()
   }
 
   return (
@@ -76,10 +78,14 @@ const TableMails = ({ incommingMails, outcommingMails }) => {
         onRow={(mail, rowId) => ({
           onClick: () => onRowClicked(mail, rowId),
         })}
+        onChange={keepAliveSession}
       />
       <MailContent
         mail={readingMail}
-        onClose={() => setReadingMail(null)}
+        onClose={() => {
+          setReadingMail(null)
+          keepAliveSession()
+        }}
         isInbox={!!incommingMails}
       />
     </>
